@@ -1,6 +1,7 @@
 library(tidyverse)
 
 files <- dir("db", full.names = TRUE)
+length(files)
 
 raw <- tibble()
 
@@ -306,9 +307,16 @@ raw %>%
   select(-1) %>% 
   distinct() -> db
 
+db %>% 
+  summarise(n = n(),
+            .by = c(`Регистрационный номер`)) %>% 
+  filter(n != 1)
+
 db %>% write_excel_csv("database_merged.xlsx")
 
-db %>% pull(`2023, Выручка, млн. RUB`) %>% `<`(100) %>% sum()
+# db %>% pull(`2023, Выручка, млн. RUB`) %>% `<`(100) %>% sum()
+
+
 
 nrow(db)
 db %>% pull(`2023, Налоги, млн. RUB`) %>% is.na() %>% sum()
@@ -319,19 +327,27 @@ db %>% pull(`2023, Налог на прибыль, млн. RUB...75`)
 db %>% pull(`2023, Налог на прибыль, млн. RUB...145`)
 
 # db$`ОКВЭД основной`
+
+okved_ht <- c(10:33, 35, 38, 50:51, 58:66, 69:75, 78, 80, 85, 86) %>% as.character()
+
 db %>% 
   mutate(okved_main_group = str_extract(`ОКВЭД основной`, "^\\d{2}")) %>% 
   summarise(n = n(),
             .by = okved_main_group) %>% 
+  filter(okved_main_group %in% okved_ht) %>% 
   arrange(desc(n)) %>% 
-  ggplot(aes(okved_main_group, n)) +
+  ggplot(aes(fct_reorder(okved_main_group, n), n)) +
   geom_col() +
+  geom_label(aes(label = n)) +
   coord_flip()
 
 
 db %>% 
-  filter(!is.na(`2023, Налог на прибыль, млн. RUB...145`)) %>% 
-  arrange(desc(`2023, Налог на прибыль, млн. RUB...145`)) %>% View()
+  mutate(okved_main_group = str_extract(`ОКВЭД основной`, "^\\d{2}")) %>% 
+  filter(okved_main_group %in% okved_ht) %>% 
+  # filter(!is.na(`2023, Налог на прибыль, млн. RUB...145`)) %>% 
+  arrange(desc(`2023, Налог на прибыль, млн. RUB...145`))
+
 
 
 
