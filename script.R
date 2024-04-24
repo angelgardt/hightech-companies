@@ -1,5 +1,6 @@
 library(tidyverse)
 theme_set(theme_bw())
+library(googlesheets4)
 
 ### MERGE ----
 d10_32 <- readxl::read_xlsx("СПАРК_Выборка_компаний_20240422_1256_ОКВЭД10-32.xlsx",
@@ -36,9 +37,13 @@ rm(d10_32, d33_80, doubles)
 
 ### -----
 
+db %>% write_sheet("https://docs.google.com/spreadsheets/d/1nXgcYfhKpscl5pm2EXmM7cGS9Ovsv4SSLoLOm7jFBFU/edit?usp=sharing",
+                   sheet = "database")
+
 View(db)
 
 db %>% colnames()
+db %>% nrow()
 
 db %>% 
   filter(!is.na(`Дата ликвидации`)) %>% 
