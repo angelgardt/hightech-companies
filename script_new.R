@@ -308,3 +308,32 @@ raw %>%
 
 db %>% write_excel_csv("database_merged.xlsx")
 
+db %>% pull(`2023, Выручка, млн. RUB`) %>% `<`(100) %>% sum()
+
+nrow(db)
+db %>% pull(`2023, Налоги, млн. RUB`) %>% is.na() %>% sum()
+
+db %>% pull(`2022, Налоги, млн. RUB`)
+db %>% pull(`2022, Налог на прибыль, млн. RUB...144`) == db %>% pull(`2022, Налог на прибыль, млн. RUB...74`)
+db %>% pull(`2023, Налог на прибыль, млн. RUB...75`)
+db %>% pull(`2023, Налог на прибыль, млн. RUB...145`)
+
+# db$`ОКВЭД основной`
+db %>% 
+  mutate(okved_main_group = str_extract(`ОКВЭД основной`, "^\\d{2}")) %>% 
+  summarise(n = n(),
+            .by = okved_main_group) %>% 
+  arrange(desc(n)) %>% 
+  ggplot(aes(okved_main_group, n)) +
+  geom_col() +
+  coord_flip()
+
+
+db %>% 
+  filter(!is.na(`2023, Налог на прибыль, млн. RUB...145`)) %>% 
+  arrange(desc(`2023, Налог на прибыль, млн. RUB...145`)) %>% View()
+
+
+
+
+
