@@ -389,25 +389,29 @@ db %>% select(matches("nalog na prib")) %>% sapply(is.na) %>% apply(2, sum)
 
 # db$`ОКВЭД основной`
 
-okved_ht <- c(10:33, 35, 38, 50:51, 58:66, 69:75, 78, 80, 85, 86) %>% as.character()
+googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
+                          sheet = "Классы") -> okved_ht
 
 db %>% 
-  mutate(okved_main_group = str_extract(`ОКВЭД основной`, "^\\d{2}")) %>% 
+  mutate(okved_main_class = str_extract(`okv·ed_osnovnoy`, "^\\d{2}")) %>% 
   summarise(n = n(),
-            .by = okved_main_group) %>% 
-  filter(okved_main_group %in% okved_ht) %>% 
+            .by = okved_main_class) %>% 
+  filter(okved_main_class %in% okved_ht$Класс) %>% 
+  mutate(p = n / sum(n)) %>% 
   arrange(desc(n)) %>% 
-  ggplot(aes(fct_reorder(okved_main_group, n), n)) +
+  ggplot(aes(fct_reorder(okved_main_class, n), n)) +
   geom_col() +
-  geom_label(aes(label = n)) +
+  geom_label(aes(label = paste(n, "|", round(p * 100, 2), "%"),
+                 y = n + 100)) +
   coord_flip()
 
 
 db %>% 
-  mutate(okved_main_group = str_extract(`ОКВЭД основной`, "^\\d{2}")) %>% 
-  filter(okved_main_group %in% okved_ht) %>% 
+  mutate(okved_main_class = str_extract(`okv·ed_osnovnoy`, "^\\d{2}")) %>% 
+  filter(okved_main_class %in% okved_ht$Класс) %>%
+  group_by(okved_main_class) %>% 
   # filter(!is.na(`2023, Налог на прибыль, млн. RUB...145`)) %>% 
-  arrange(desc(`2023, Налог на прибыль, млн. RUB...145`))
+  arrange(okved_main_class, desc(`2023_nalog na pribylʹ, mln. rub`))
 
 
 
