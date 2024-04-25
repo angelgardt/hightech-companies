@@ -1,5 +1,7 @@
 library(tidyverse)
+theme_set(theme_bw())
 
+## Reading ----
 files <- dir("db", full.names = TRUE)
 length(files)
 
@@ -18,6 +20,8 @@ for (file in files) {
   print("done")
 }
 
+
+## Preprocess ----
 raw %>% colnames()
 
 raw %>% 
@@ -69,7 +73,7 @@ raw %>%
   # select(nrow, Наименование, `Регистрационный номер`, matches("НДПИ")) %>% View()
 
 
-## nrows delete ----
+## nrows delete
 # nrows_del <- c(50256,
 # 72520,
 # 132504,
@@ -292,8 +296,6 @@ raw %>%
 # 122353,
 # 154265)
 
-## ----
-
 
 raw %>% 
   mutate(nrow = 1:nrow(raw)) %>% 
@@ -317,14 +319,73 @@ db %>% write_excel_csv("database_merged.xlsx")
 # db %>% pull(`2023, Выручка, млн. RUB`) %>% `<`(100) %>% sum()
 
 
+## Analysis ----
 
 nrow(db)
-db %>% pull(`2023, Налоги, млн. RUB`) %>% is.na() %>% sum()
 
-db %>% pull(`2022, Налоги, млн. RUB`)
-db %>% pull(`2022, Налог на прибыль, млн. RUB...144`) == db %>% pull(`2022, Налог на прибыль, млн. RUB...74`)
-db %>% pull(`2023, Налог на прибыль, млн. RUB...75`)
-db %>% pull(`2023, Налог на прибыль, млн. RUB...145`)
+db %>% 
+  colnames() %>% 
+  str_to_lower() %>% 
+  str_remove(",|\\.|\\(|\\)") %>% 
+  str_replace("\\s", "_") %>% 
+  stringi::stri_trans_general("russian-latin/bgn") -> new_names
+db %>% set_names(new_names) -> db
+
+db %>% select(matches("nalog na prib")) %>% sapply(is.na) %>% apply(2, sum)
+db %>% select(matches("oplata")) %>% sapply(is.na) %>% apply(2, sum)
+
+# db %>% select(matches("nalog na prib")) %>% sapply(class)
+
+db %>% mutate(`2019_nalog na pribylʹ, mln. rub` = ifelse(is.na(`2019_nalog na pribylʹ, mln. rub...71`), 
+                                                         `2019_nalog na pribylʹ, mln. rub...141`,
+                                                         ifelse(is.na(`2019_nalog na pribylʹ, mln. rub...141`), 
+                                                                `2019_nalog na pribylʹ, mln. rub...71`,
+                                                                ifelse(`2019_nalog na pribylʹ, mln. rub...71` >= `2019_nalog na pribylʹ, mln. rub...141`,
+                                                                       `2019_nalog na pribylʹ, mln. rub...71`,
+                                                                       ifelse(`2019_nalog na pribylʹ, mln. rub...71` < `2019_nalog na pribylʹ, mln. rub...141`,
+                                                                              `2019_nalog na pribylʹ, mln. rub...141`, NA)))),
+              `2020_nalog na pribylʹ, mln. rub` = ifelse(is.na(`2020_nalog na pribylʹ, mln. rub...72`), 
+                                                         `2020_nalog na pribylʹ, mln. rub...142`,
+                                                         ifelse(is.na(`2020_nalog na pribylʹ, mln. rub...142`), 
+                                                                `2020_nalog na pribylʹ, mln. rub...72`,
+                                                                ifelse(`2020_nalog na pribylʹ, mln. rub...72` >= `2020_nalog na pribylʹ, mln. rub...142`,
+                                                                       `2020_nalog na pribylʹ, mln. rub...72`,
+                                                                       ifelse(`2020_nalog na pribylʹ, mln. rub...72` < `2020_nalog na pribylʹ, mln. rub...142`,
+                                                                              `2020_nalog na pribylʹ, mln. rub...142`, NA)))),
+              `2021_nalog na pribylʹ, mln. rub` = ifelse(is.na(`2021_nalog na pribylʹ, mln. rub...73`), 
+                                                         `2021_nalog na pribylʹ, mln. rub...143`,
+                                                         ifelse(is.na(`2021_nalog na pribylʹ, mln. rub...143`), 
+                                                                `2021_nalog na pribylʹ, mln. rub...73`,
+                                                                ifelse(`2021_nalog na pribylʹ, mln. rub...73` >= `2021_nalog na pribylʹ, mln. rub...143`,
+                                                                       `2021_nalog na pribylʹ, mln. rub...73`,
+                                                                       ifelse(`2021_nalog na pribylʹ, mln. rub...73` < `2021_nalog na pribylʹ, mln. rub...143`,
+                                                                              `2021_nalog na pribylʹ, mln. rub...143`, NA)))),
+              `2022_nalog na pribylʹ, mln. rub` = ifelse(is.na(`2022_nalog na pribylʹ, mln. rub...74`), 
+                                                         `2022_nalog na pribylʹ, mln. rub...144`,
+                                                         ifelse(is.na(`2022_nalog na pribylʹ, mln. rub...144`), 
+                                                                `2022_nalog na pribylʹ, mln. rub...74`,
+                                                                ifelse(`2022_nalog na pribylʹ, mln. rub...74` >= `2022_nalog na pribylʹ, mln. rub...144`,
+                                                                       `2022_nalog na pribylʹ, mln. rub...74`,
+                                                                       ifelse(`2022_nalog na pribylʹ, mln. rub...74` < `2022_nalog na pribylʹ, mln. rub...144`,
+                                                                              `2022_nalog na pribylʹ, mln. rub...144`, NA)))),
+              `2023_nalog na pribylʹ, mln. rub` = ifelse(is.na(`2023_nalog na pribylʹ, mln. rub...75`), 
+                                                         `2023_nalog na pribylʹ, mln. rub...145`,
+                                                         ifelse(is.na(`2023_nalog na pribylʹ, mln. rub...145`), 
+                                                                `2023_nalog na pribylʹ, mln. rub...75`,
+                                                                ifelse(`2023_nalog na pribylʹ, mln. rub...75` >= `2023_nalog na pribylʹ, mln. rub...145`,
+                                                                       `2023_nalog na pribylʹ, mln. rub...75`,
+                                                                       ifelse(`2023_nalog na pribylʹ, mln. rub...75` < `2023_nalog na pribylʹ, mln. rub...145`,
+                                                                              `2023_nalog na pribylʹ, mln. rub...145`, NA))))) %>% 
+  #select(matches("2020_nalog na prib")) %>% View()
+  select(-matches("nalog na pribylʹ, mln. rub...")) -> db
+
+db %>% select(matches("nalog na prib")) %>% sapply(is.na) %>% apply(2, sum)
+
+
+# db %>% pull(`2022, Налоги, млн. RUB`)
+# db %>% pull(`2022, Налог на прибыль, млн. RUB...144`) == db %>% pull(`2022, Налог на прибыль, млн. RUB...74`)
+# db %>% pull(`2023, Налог на прибыль, млн. RUB...75`)
+# db %>% pull(`2023, Налог на прибыль, млн. RUB...145`)
 
 # db$`ОКВЭД основной`
 
