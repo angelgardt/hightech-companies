@@ -475,8 +475,7 @@ db_ht %>%
          `2022_ndfl_1, mln. rub.` = `2022_oplata truda, mln. rub` * 0.13,
          `2021_ndfl_1, mln. rub.` = `2021_oplata truda, mln. rub` * 0.13,
          `2020_ndfl_1, mln. rub.` = `2020_oplata truda, mln. rub` * 0.13,
-         `2019_ndfl_1, mln. rub.` = `2019_oplata truda, mln. rub` * 0.13) %>% 
-  select(matches("ndfl"))
+         `2019_ndfl_1, mln. rub.` = `2019_oplata truda, mln. rub` * 0.13) -> db_ht
 
 
 db_ht %>% # View()
@@ -504,11 +503,12 @@ db_ht %>% # View()
   select(registratsionnyy_nomer, naimenovaniye, year, ndfl_2) %>% 
   mutate(name = paste0(year, "_ndfl_2, mln. rub.")) %>% 
   select(-year) %>% 
-  pivot_wider(names_from = name, values_from = ndfl_2)
+  pivot_wider(names_from = name, values_from = ndfl_2) %>% 
+  full_join(db_ht, join_by(registratsionnyy_nomer, naimenovaniye)) -> db_ht
+
+colnames(db_ht)
 
 
-
-
-
+hist(db_ht$`2023_ndfl_1, mln. rub.` - db_ht$`2023_ndfl_2, mln. rub.`)
 
 
