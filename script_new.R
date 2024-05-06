@@ -321,13 +321,13 @@ db %>% write_excel_csv("database_merged.xlsx")
 
 ### ANALYSIS -----
 
+db <- read_csv("database_merged.xlsx", name_repair = "minimal")
+
 okved_ht <- c(10:33, 35, 38, 50:51, 58:66, 69:75, 78, 80, 85, 86) %>% as.character()
 
 nrow(db)
 db %>% select(matches("Налог на прибыль")) %>% sapply(is.na) %>% apply(2, sum)
 
-
-db %>% 
 
 
 db %>% pull(`2022, Налог на прибыль, млн. RUB...144`) == db %>% pull(`2022, Налог на прибыль, млн. RUB...74`)
@@ -358,6 +358,12 @@ db %>%
   # filter(!is.na(`2023, Налог на прибыль, млн. RUB...145`)) %>% 
   arrange(desc(`2023, Налог на прибыль, млн. RUB...145`))
 
+
+db %>% 
+  mutate(okved_main_group = str_extract(`ОКВЭД основной`, "^\\d{2}")) %>% 
+  filter(okved_main_group %in% okved_ht) %>% 
+  select(matches("Оплата труда"))
+  
 
 
 
