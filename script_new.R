@@ -599,51 +599,20 @@ db %>% filter(str_detect(naimenovaniye, "ОЗОН")) %>%
 # slice(1:30) %>% 
 #   write.csv2("subset.csv", fileEncoding = "UTF-8")
 
-
-db_ht %>% nrow()  
-db_ht %>% pull(registratsionnyy_nomer) %>% unique() %>% length()
-db_ht %>% pull(naimenovaniye) %>% unique() %>% length()
-db_ht %>% distinct(registratsionnyy_nomer, naimenovaniye) %>% nrow()
-db_ht %>% pull(`2019_srednespisochnaya chislennostʹ rabotnikov`) %>% unique()
-
-db_ht %>% 
-  mutate(`2023_ndfl_1, mln. rub.` = `2023_oplata truda, mln. rub` * 0.13,
-         `2022_ndfl_1, mln. rub.` = `2022_oplata truda, mln. rub` * 0.13,
-         `2021_ndfl_1, mln. rub.` = `2021_oplata truda, mln. rub` * 0.13,
-         `2020_ndfl_1, mln. rub.` = `2020_oplata truda, mln. rub` * 0.13,
-         `2019_ndfl_1, mln. rub.` = `2019_oplata truda, mln. rub` * 0.13) -> db_ht
-
-
-db_ht %>% # View()
-  select(registratsionnyy_nomer, naimenovaniye, matches("oplata truda"), matches("srednespisochnaya")) %>% # colnames()
-  mutate_at(vars(matches("srednespisochnaya")), as.numeric) %>% # View()
-  pivot_longer(cols = -c(registratsionnyy_nomer, naimenovaniye)) %>% 
-  separate(name, into = c("year", "stat"), sep = "_") %>% 
-  pivot_wider(names_from = stat, values_from = value) %>% 
-  mutate(srednemes_zp = `oplata truda, mln. rub` / `srednespisochnaya chislennostʹ rabotnikov` / 12) %>% 
-  mutate(n_mes = ifelse(srednemes_zp > .35, 0,
-                        ifelse(srednemes_zp * 2 > .35, 1,
-                               ifelse(srednemes_zp * 3 > .35, 2,
-                                      ifelse(srednemes_zp * 4 > .35, 3,
-                                             ifelse(srednemes_zp * 5 > .35, 4,
-                                                    ifelse(srednemes_zp * 6 > .35, 5,
-                                                           ifelse(srednemes_zp * 7 > .35, 6,
-                                                                  ifelse(srednemes_zp * 8 > .35, 7,
-                                                                         ifelse(srednemes_zp * 9 > .35, 8,
-                                                                                ifelse(srednemes_zp * 10 > .35, 9,
-                                                                                       ifelse(srednemes_zp * 11 > .35, 10,
-                                                                                              ifelse(srednemes_zp * 12 > .35, 11,
-                                                                                                     ifelse(srednemes_zp * 13 > .35, 12, NA)))))))))))))) %>% # View()
-  mutate(vychet = `srednespisochnaya chislennostʹ rabotnikov` * 0.0014 * n_mes,
-         ndfl_2 = (`oplata truda, mln. rub` - vychet) * 0.13) %>% 
-  select(registratsionnyy_nomer, naimenovaniye, year, ndfl_2) %>% 
-  mutate(name = paste0(year, "_ndfl_2, mln. rub.")) %>% 
-  select(-year) %>% 
-  pivot_wider(names_from = name, values_from = ndfl_2) %>% 
-  full_join(db_ht, join_by(registratsionnyy_nomer, naimenovaniye)) -> db_ht
-
 colnames(db_ht)
 
 
 hist(db_ht$`2023_ndfl_1, mln. rub.` - db_ht$`2023_ndfl_2, mln. rub.`)
+
+
+
+db_ht %>% # colnames()
+  select(registratsionnyy_nomer,
+         naimenovaniye,
+         razmer_kompanii,
+         `okv·ed_osnovnoy`,
+         `okv·edy_dopolnitelʹnyye`,
+         okved_main_class,
+         contains("ndfl"),
+         contains("nalog na pribyl"))
 
