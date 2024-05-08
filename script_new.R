@@ -321,7 +321,6 @@ db %>% write_excel_csv("database_merged.xlsx")
 
 ### ANALYSIS -----
 
-
 db <- read_csv("database_merged.xlsx") %>% mutate(`Регистрационный номер` = as.character(`Регистрационный номер`))
 
 
@@ -425,6 +424,7 @@ db_ht %>%
 #   googlesheets4::write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
 #                              sheet = "CONPANII")
 
+<<<<<<< HEAD
 
 db_ht %>% 
   group_by(okved_main_class) %>% 
@@ -518,11 +518,10 @@ colnames(db_ht)
 hist(db_ht$`2023_ndfl_1, mln. rub.` - db_ht$`2023_ndfl_2, mln. rub.`)
 
 
-db %>% 
+db_ht %>% 
   group_by(okved_main_class) %>% 
   summarise(nalog_na_pribl = sum(`2023_nalog na pribylʹ, mln. rub`, na.rm = TRUE)) %>% 
   mutate(prop = nalog_na_pribl / sum(nalog_na_pribl)) %>% 
-  filter(okved_main_class %in% okved_ht$Класс) %>% 
   arrange(desc(nalog_na_pribl)) %>% 
   ggplot(aes(fct_reorder(okved_main_class, nalog_na_pribl), nalog_na_pribl)) +
   geom_col() +
@@ -530,15 +529,17 @@ db %>%
                  y = nalog_na_pribl + 1000)) +
   coord_flip()
 
-db %>% arrange(desc(`2022_nalog na pribylʹ, mln. rub`)) %>% 
+db_ht %>% 
+  arrange(desc(`2022_nalog na pribylʹ, mln. rub`)) %>% 
   select(naimenovaniye, `2023_nalog na pribylʹ, mln. rub`)
 
-db %>% arrange(desc(`2021_nalog na pribylʹ, mln. rub`)) %>% 
+db_ht %>% 
+  arrange(desc(`2021_nalog na pribylʹ, mln. rub`)) %>% 
   filter(str_detect(naimenovaniye, "МЕДИЦИНСКИЕ УСЛУГИ")) %>% 
   select(naimenovaniye, `2023_nalog na pribylʹ, mln. rub`,
          `2022_nalog na pribylʹ, mln. rub`,
          `2021_nalog na pribylʹ, mln. rub`,
-         `2020_nalog na pribylʹ, mln. rub`) %>% View()
+         `2020_nalog na pribylʹ, mln. rub`)
 
 ## поправка на 17% в рег бюджет
 ## картинки с годами рядом
@@ -558,6 +559,51 @@ db %>% filter(str_detect(naimenovaniye, "ОЗОН")) %>%
 #   slice(1:30) %>% write_excel_csv("subset.xlsx")
 # slice(1:30) %>% 
 #   write.csv2("subset.csv", fileEncoding = "UTF-8")
+
+
+db_ht %>% nrow()  
+db_ht %>% pull(registratsionnyy_nomer) %>% unique() %>% length()
+db_ht %>% pull(naimenovaniye) %>% unique() %>% length()
+db_ht %>% distinct(registratsionnyy_nomer, naimenovaniye) %>% nrow()
+db_ht %>% pull(`2019_srednespisochnaya chislennostʹ rabotnikov`) %>% unique()
+
+db_ht %>% 
+  mutate(`2023_ndfl_1, mln. rub.` = `2023_oplata truda, mln. rub` * 0.13,
+         `2022_ndfl_1, mln. rub.` = `2022_oplata truda, mln. rub` * 0.13,
+         `2021_ndfl_1, mln. rub.` = `2021_oplata truda, mln. rub` * 0.13,
+         `2020_ndfl_1, mln. rub.` = `2020_oplata truda, mln. rub` * 0.13,
+         `2019_ndfl_1, mln. rub.` = `2019_oplata truda, mln. rub` * 0.13) %>% 
+  select(matches("ndfl"))
+
+
+db_ht %>% # View()
+  select(registratsionnyy_nomer, naimenovaniye, matches("oplata truda"), matches("srednespisochnaya")) %>% # colnames()
+  mutate_at(vars(matches("srednespisochnaya")), as.numeric) %>% # View()
+  pivot_longer(cols = -c(registratsionnyy_nomer, naimenovaniye)) %>% 
+  separate(name, into = c("year", "stat"), sep = "_") %>% 
+  pivot_wider(names_from = stat, values_from = value) %>% 
+  mutate(srednemes_zp = `oplata truda, mln. rub` / `srednespisochnaya chislennostʹ rabotnikov` / 12) %>% 
+  mutate(n_mes = ifelse(srednemes_zp > .35, 0,
+                        ifelse(srednemes_zp * 2 > .35, 1,
+                               ifelse(srednemes_zp * 3 > .35, 2,
+                                      ifelse(srednemes_zp * 4 > .35, 3,
+                                             ifelse(srednemes_zp * 5 > .35, 4,
+                                                    ifelse(srednemes_zp * 6 > .35, 5,
+                                                           ifelse(srednemes_zp * 7 > .35, 6,
+                                                                  ifelse(srednemes_zp * 8 > .35, 7,
+                                                                         ifelse(srednemes_zp * 9 > .35, 8,
+                                                                                ifelse(srednemes_zp * 10 > .35, 9,
+                                                                                       ifelse(srednemes_zp * 11 > .35, 10,
+                                                                                              ifelse(srednemes_zp * 12 > .35, 11,
+                                                                                                     ifelse(srednemes_zp * 13 > .35, 12, NA)))))))))))))) %>% # View()
+  mutate(vychet = `srednespisochnaya chislennostʹ rabotnikov` * 0.0014 * n_mes,
+         ndfl_2 = (`oplata truda, mln. rub` - vychet) * 0.13) %>% 
+  select(registratsionnyy_nomer, naimenovaniye, year, ndfl_2) %>% 
+  mutate(name = paste0(year, "_ndfl_2, mln. rub.")) %>% 
+  select(-year) %>% 
+  pivot_wider(names_from = name, values_from = ndfl_2)
+
+
 
 
 
