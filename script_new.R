@@ -423,10 +423,17 @@ db_ht %>%
 db_ht %>% # colnames()
   summarise(n = n(),
             .by = c(okved_main_class, razmer_kompanii)) %>% 
-  mutate(p = n / sum(n),
+  full_join(db_ht %>% 
+              summarise(n_okved = n(),
+                        .by = okved_main_class),
+            join_by(okved_main_class)) %>% 
+  mutate(p = round(n / sum(n) * 100, 2),
+         p_okved = round(n / n_okved * 100, 2),
          razmer_kompanii = factor(razmer_kompanii, ordered = TRUE,
                                   levels = c("Микропредприятия", "Малые предприятия", "Средние предприятия", "Крупные предприятия"))) %>% 
-  arrange(desc(n)) %>% 
+  arrange(okved_main_class, desc(n)) %>% 
+  # write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
+  #             sheet = "Структура_количество-размер")
   ggplot(aes(fct_reorder(okved_main_class, n), n, fill = razmer_kompanii)) +
   geom_col() +
   # geom_label(aes(label = paste(n, "|", round(p * 100, 2), "%"),
