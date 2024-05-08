@@ -321,6 +321,13 @@ db %>% write_excel_csv("database_merged.xlsx")
 
 ### ANALYSIS -----
 
+
+library(googlesheets4)
+library(tidyverse)
+theme_set(theme_bw())
+theme_update(legend.position = "bottom")
+
+
 db <- read_csv("database_merged.xlsx") %>% mutate(`Регистрационный номер` = as.character(`Регистрационный номер`))
 
 
@@ -400,13 +407,37 @@ db %>% filter(okved_main_class %in% okved_ht$Класс) -> db_ht
 db_ht %>% 
   summarise(n = n(),
             .by = okved_main_class) %>% 
-  mutate(p = n / sum(n)) %>% 
+  mutate(p = round(n / sum(n) * 100, 2)) %>% 
   arrange(desc(n)) %>% 
+  # write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
+  #             sheet = "Структура_количество")
   ggplot(aes(fct_reorder(okved_main_class, n), n)) +
   geom_col() +
-  geom_label(aes(label = paste(n, "|", round(p * 100, 2), "%"),
+  geom_label(aes(label = paste(n, "|", p, "%"),
                  y = n + 100)) +
-  coord_flip()
+  coord_flip() +
+  labs(x = "ОКВЭД (основной)", y = "Количество компаний",
+       title = "Структура высокотехнологичного сектора Москвы",
+       subtitle = "Количество компаний")
+
+db_ht %>% # colnames()
+  summarise(n = n(),
+            .by = c(okved_main_class, razmer_kompanii)) %>% 
+  mutate(p = n / sum(n),
+         razmer_kompanii = factor(razmer_kompanii, ordered = TRUE,
+                                  levels = c("Микропредприятия", "Малые предприятия", "Средние предприятия", "Крупные предприятия"))) %>% 
+  arrange(desc(n)) %>% 
+  ggplot(aes(fct_reorder(okved_main_class, n), n, fill = razmer_kompanii)) +
+  geom_col() +
+  # geom_label(aes(label = paste(n, "|", round(p * 100, 2), "%"),
+  #                y = n + 100)) +
+  coord_flip() +
+  scale_fill_manual(values = c("Микропредприятия" = "red4", "Малые предприятия" = "green4", "Средние предприятия" = "orange4", "Крупные предприятия" = "blue4")) +
+  labs(x = "ОКВЭД (основной)", y = "Количество компаний", fill = "Размер компании",
+       title = "Структура высокотехнологичного сектора Москвы",
+       subtitle = "Количество и размер компаний")
+
+
 
 # db %>% 
 #   filter(okved_main_class %in% okved_ht$Класс) %>%
@@ -424,7 +455,7 @@ db_ht %>%
 #   googlesheets4::write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
 #                              sheet = "CONPANII")
 
-<<<<<<< HEAD
+
 
 db_ht %>% 
   group_by(okved_main_class) %>% 
