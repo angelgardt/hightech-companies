@@ -614,5 +614,11 @@ db_ht %>% # colnames()
          `okv·edy_dopolnitelʹnyye`,
          okved_main_class,
          contains("ndfl"),
-         contains("nalog na pribyl"))
+         contains("nalog na pribyl")) %>% write_csv("db_ht_nalogi.csv")
+
+
+
+## NALOGI -----
+
+db_ht_nalogi <- read_csv("db_ht_nalogi.csv") %>% mutate(registratsionnyy_nomer = as.character(registratsionnyy_nomer))
 
