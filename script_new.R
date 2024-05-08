@@ -325,9 +325,7 @@ db %>% write_excel_csv("database_merged.xlsx")
 db <- read_csv("database_merged.xlsx") %>% mutate(`Регистрационный номер` = as.character(`Регистрационный номер`))
 
 
-
 nrow(db)
-
 
 db %>% 
   colnames() %>% 
@@ -335,6 +333,7 @@ db %>%
   str_remove(",|\\.|\\(|\\)") %>% 
   str_replace("\\s", "_") %>% 
   stringi::stri_trans_general("russian-latin/bgn") -> new_names
+
 
 db %>% set_names(new_names) -> db
 db %>% select(matches("nalog na prib")) %>% sapply(is.na) %>% apply(2, sum)
@@ -384,7 +383,6 @@ db %>% mutate(`2019_nalog na pribylʹ, mln. rub` = ifelse(is.na(`2019_nalog na p
   select(-matches("nalog na pribylʹ, mln. rub...")) %>% 
   mutate(okved_main_class = str_extract(`okv·ed_osnovnoy`, "^\\d{2}")) -> db
 
-
 googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
                           sheet = "Классы") -> okved_ht
 
@@ -396,6 +394,7 @@ db %>% select(matches("nalog na prib")) %>% sapply(is.na) %>% apply(2, sum)
 # db %>% pull(`2023, Налог на прибыль, млн. RUB...75`)
 # db %>% pull(`2023, Налог на прибыль, млн. RUB...145`)
 # db$`ОКВЭД основной`
+
 
 db %>% filter(okved_main_class %in% okved_ht$Класс) -> db_ht
 
@@ -425,6 +424,7 @@ db_ht %>%
 #   # filter(okved_main_class %in% c(62, 71, 73)) %>% View()
 #   googlesheets4::write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
 #                              sheet = "CONPANII")
+
 
 db_ht %>% 
   group_by(okved_main_class) %>% 
@@ -516,5 +516,48 @@ colnames(db_ht)
 
 
 hist(db_ht$`2023_ndfl_1, mln. rub.` - db_ht$`2023_ndfl_2, mln. rub.`)
+
+
+db %>% 
+  group_by(okved_main_class) %>% 
+  summarise(nalog_na_pribl = sum(`2023_nalog na pribylʹ, mln. rub`, na.rm = TRUE)) %>% 
+  mutate(prop = nalog_na_pribl / sum(nalog_na_pribl)) %>% 
+  filter(okved_main_class %in% okved_ht$Класс) %>% 
+  arrange(desc(nalog_na_pribl)) %>% 
+  ggplot(aes(fct_reorder(okved_main_class, nalog_na_pribl), nalog_na_pribl)) +
+  geom_col() +
+  geom_label(aes(label = paste(nalog_na_pribl, "\n", round(prop * 100, 2), "%"),
+                 y = nalog_na_pribl + 1000)) +
+  coord_flip()
+
+db %>% arrange(desc(`2022_nalog na pribylʹ, mln. rub`)) %>% 
+  select(naimenovaniye, `2023_nalog na pribylʹ, mln. rub`)
+
+db %>% arrange(desc(`2021_nalog na pribylʹ, mln. rub`)) %>% 
+  filter(str_detect(naimenovaniye, "МЕДИЦИНСКИЕ УСЛУГИ")) %>% 
+  select(naimenovaniye, `2023_nalog na pribylʹ, mln. rub`,
+         `2022_nalog na pribylʹ, mln. rub`,
+         `2021_nalog na pribylʹ, mln. rub`,
+         `2020_nalog na pribylʹ, mln. rub`) %>% View()
+
+## поправка на 17% в рег бюджет
+## картинки с годами рядом
+## среднее взвешенное по всем годам
+
+db$`2023_oplata truda, mln. rub`
+db %>% filter(str_detect(naimenovaniye, "ТИНЬКОФФ")) %>% 
+  select(okved_main_class, `2023_nalog na pribylʹ, mln. rub`)
+db %>% filter(str_detect(naimenovaniye, "ТИНЬКОФФ")) %>% 
+  select(okved_main_class, `2023_oplata truda, mln. rub`)
+db %>% filter(str_detect(naimenovaniye, "СБЕР")) %>% 
+  select(naimenovaniye, okved_main_class, `2023_nalog na pribylʹ, mln. rub`)
+db %>% filter(str_detect(naimenovaniye, "ОЗОН")) %>% 
+  select(naimenovaniye, okved_main_class, `2023_nalog na pribylʹ, mln. rub`)
+
+# db %>% 
+#   slice(1:30) %>% write_excel_csv("subset.xlsx")
+# slice(1:30) %>% 
+#   write.csv2("subset.csv", fileEncoding = "UTF-8")
+
 
 
