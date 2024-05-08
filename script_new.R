@@ -671,8 +671,10 @@ db_ht_nalogi_reg %>%
   summarise(sum_ndfl_class = sum(reg_ndfl, na.rm = TRUE),
             sum_nprib_class = sum(reg_nprib, na.rm = TRUE),
             .by = okved_main_class) %>%
+  mutate(p_ndfl_class = sum_ndfl_class / sum(sum_ndfl_class),
+         p_nprib_class = sum_nprib_class / sum(sum_nprib_class)) %>% 
   # write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
-  #             sheet = "Налоги от отраслей за отчетный период (2019-2023)")
+  #            sheet = "Налоги от отраслей за отчетный период (2019-2023)")
   right_join(ht_nalogi_2019_2023 %>% 
                select(-matches("^wmean")), join_by(okved_main_class)) %>% 
   mutate(p_ndfl = sum_ndfl / sum_ndfl_class,
