@@ -655,7 +655,28 @@ db_ht_nalogi %>%
   mutate(reg_ndfl = `ndfl_1, mln. rub.` * 0.85,
          reg_nprib = `nalog na pribylʹ, mln. rub` * 0.85) -> db_ht_nalogi_reg
 
+db_ht_nalogi_reg %>% 
+  summarise(sum_ndfl = sum(reg_ndfl, na.rm = TRUE),
+            sum_nprib = sum(reg_nprib, na.rm = TRUE),
+            wmean_ndfl = weighted.mean(reg_ndfl, `srednespisochnaya chislennostʹ rabotnikov`, na.rm = TRUE),
+            wmean_nprib = weighted.mean(reg_nprib, `srednespisochnaya chislennostʹ rabotnikov`, na.rm = TRUE),
+            .by = c(registratsionnyy_nomer, naimenovaniye, okved_main_class)) -> ht_nalogi_2019_2023 
+
+# ht_nalogi_2019_2023 %>% 
+#   write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
+#               sheet = "Налоги компаний за отчетный период (2019-2023)")
+
+
+db_ht_nalogi_reg %>% 
+  summarise(sum_ndfl_class = sum(reg_ndfl, na.rm = TRUE),
+            sum_nprib_class = sum(reg_nprib, na.rm = TRUE),
+            .by = okved_main_class) %>%
+  # write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
+  #             sheet = "Налоги от отраслей за отчетный период (2019-2023)")
+  right_join(ht_nalogi_2019_2023 %>% 
+               select(-matches("^wmean")), join_by(okved_main_class)) %>% 
+  mutate(p_ndfl = sum_ndfl / sum_ndfl_class,
+         p_nprib = sum_nprib / sum_nprib_class) %>% print()
+  # write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
+  #             sheet = "Налоги компаний за отчетный период (2019-2023) Доли")
   
-
-
-
