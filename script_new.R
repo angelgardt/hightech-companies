@@ -641,16 +641,19 @@ db_ht_nalogi %>%
   select(-name) %>% 
   pivot_wider(names_from = stat,
               values_from = value) %>% # View()
-  select(contains("ndfl")) %>% 
+  ### COMPARE TWO WAYS TO CALCULATE NDFL
+  # select(contains("ndfl")) %>% 
   # sapply(function(x) sum(is.na(x)))
-  mutate(diff = `ndfl_1, mln. rub.` - `ndfl_2, mln. rub.`,
-         abs_diff = abs(diff),
-         is_positive = ifelse(diff >= 0, TRUE, FALSE),
-         prop_diff_1 = abs_diff / `ndfl_1, mln. rub.` * 100) %>%
+  # mutate(diff = `ndfl_1, mln. rub.` - `ndfl_2, mln. rub.`,
+  #        abs_diff = abs(diff),
+  #        is_positive = ifelse(diff >= 0, TRUE, FALSE),
+  #        prop_diff_1 = abs_diff / `ndfl_1, mln. rub.` * 100) %>%
   # pull(is_positive) %>% table()
-  summarise(min = min(prop_diff_1, na.rm = TRUE),
-            mean = mean(prop_diff_1, na.rm = TRUE),
-            max = max(prop_diff_1, na.rm = TRUE))
+  # summarise(min = min(prop_diff_1, na.rm = TRUE),
+  #           mean = mean(prop_diff_1, na.rm = TRUE),
+  #           max = max(prop_diff_1, na.rm = TRUE))
+  mutate(reg_ndfl = `ndfl_1, mln. rub.` * 0.85,
+         reg_nprib = `nalog na pribylʹ, mln. rub` * 0.85)
   
 
 
