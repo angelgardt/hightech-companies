@@ -321,9 +321,13 @@ db %>% write_excel_csv("database_merged.xlsx")
 
 ### ANALYSIS -----
 
+
 db <- read_csv("database_merged.xlsx") %>% mutate(`Регистрационный номер` = as.character(`Регистрационный номер`))
 
+
+
 nrow(db)
+
 
 db %>% 
   colnames() %>% 
@@ -379,6 +383,7 @@ db %>% mutate(`2019_nalog na pribylʹ, mln. rub` = ifelse(is.na(`2019_nalog na p
   #select(matches("2020_nalog na prib")) %>% View()
   select(-matches("nalog na pribylʹ, mln. rub...")) %>% 
   mutate(okved_main_class = str_extract(`okv·ed_osnovnoy`, "^\\d{2}")) -> db
+
 
 googlesheets4::read_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
                           sheet = "Классы") -> okved_ht
@@ -507,6 +512,7 @@ db_ht %>% # View()
   full_join(db_ht, join_by(registratsionnyy_nomer, naimenovaniye)) -> db_ht
 
 colnames(db_ht)
+
 
 
 hist(db_ht$`2023_ndfl_1, mln. rub.` - db_ht$`2023_ndfl_2, mln. rub.`)
