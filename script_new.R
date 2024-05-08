@@ -462,6 +462,7 @@ db_ht %>% # colnames()
 #   googlesheets4::write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
 #                              sheet = "CONPANII")
 
+db_ht %>% pull(status) %>% unique()
 
 
 db_ht %>% 
