@@ -606,9 +606,5 @@ db_ht %>% # View()
 colnames(db_ht)
 
 
-<<<<<<< HEAD
-=======
 hist(db_ht$`2023_ndfl_1, mln. rub.` - db_ht$`2023_ndfl_2, mln. rub.`)
 
-
->>>>>>> d5f600e (save changes)
