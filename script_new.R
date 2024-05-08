@@ -645,7 +645,13 @@ db_ht_nalogi %>%
   # sapply(function(x) sum(is.na(x)))
   mutate(diff = `ndfl_1, mln. rub.` - `ndfl_2, mln. rub.`,
          abs_diff = abs(diff),
-         is_positive = ifelse(diff > 0, TRUE, FALSE)) %>% pull(is_positive) %>% table()
+         is_positive = ifelse(diff >= 0, TRUE, FALSE),
+         prop_diff_1 = abs_diff / `ndfl_1, mln. rub.` * 100) %>%
+  # pull(is_positive) %>% table()
+  summarise(min = min(prop_diff_1, na.rm = TRUE),
+            mean = mean(prop_diff_1, na.rm = TRUE),
+            max = max(prop_diff_1, na.rm = TRUE))
+  
 
 
 
