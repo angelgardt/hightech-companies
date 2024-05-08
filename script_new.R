@@ -341,7 +341,11 @@ db %>%
   stringi::stri_trans_general("russian-latin/bgn") -> new_names
 
 
-db %>% set_names(new_names) -> db
+db %>% 
+  set_names(new_names) %>% 
+  mutate_at(vars(matches("srednespisochnaya")), str_remove_all, pattern = " ") %>% # View()
+  mutate_at(vars(matches("srednespisochnaya")), as.numeric) -> db
+
 db %>% select(matches("nalog na prib")) %>% sapply(is.na) %>% apply(2, sum)
 db %>% select(matches("oplata")) %>% sapply(is.na) %>% apply(2, sum)
 # db %>% select(matches("nalog na prib")) %>% sapply(class)
@@ -465,16 +469,16 @@ db_ht %>% # colnames()
 db_ht %>% pull(status) %>% unique()
 
 
-db_ht %>% 
-  group_by(okved_main_class) %>% 
-  summarise(nalog_na_pribl = sum(`2023_nalog na pribylʹ, mln. rub`, na.rm = TRUE)) %>% 
-  mutate(prop = nalog_na_pribl / sum(nalog_na_pribl)) %>% 
-  arrange(desc(nalog_na_pribl)) %>% 
-  ggplot(aes(fct_reorder(okved_main_class, nalog_na_pribl), nalog_na_pribl)) +
-  geom_col() +
-  geom_label(aes(label = paste(nalog_na_pribl, "\n", round(prop * 100, 2), "%"),
-                 y = nalog_na_pribl + 1000)) +
-  coord_flip()
+# db_ht %>% 
+#   group_by(okved_main_class) %>% 
+#   summarise(nalog_na_pribl = sum(`2023_nalog na pribylʹ, mln. rub`, na.rm = TRUE)) %>% 
+#   mutate(prop = nalog_na_pribl / sum(nalog_na_pribl)) %>% 
+#   arrange(desc(nalog_na_pribl)) %>% 
+#   ggplot(aes(fct_reorder(okved_main_class, nalog_na_pribl), nalog_na_pribl)) +
+#   geom_col() +
+#   geom_label(aes(label = paste(nalog_na_pribl, "\n", round(prop * 100, 2), "%"),
+#                  y = nalog_na_pribl + 1000)) +
+#   coord_flip()
 
 db_ht %>% 
   arrange(desc(`2022_nalog na pribylʹ, mln. rub`)) %>% 
@@ -524,7 +528,6 @@ db_ht %>%
 
 db_ht %>% # View()
   select(registratsionnyy_nomer, naimenovaniye, matches("oplata truda"), matches("srednespisochnaya")) %>% # colnames()
-  mutate_at(vars(matches("srednespisochnaya")), as.numeric) %>% # View()
   pivot_longer(cols = -c(registratsionnyy_nomer, naimenovaniye)) %>% 
   separate(name, into = c("year", "stat"), sep = "_") %>% 
   pivot_wider(names_from = stat, values_from = value) %>% 
@@ -551,26 +554,27 @@ db_ht %>% # View()
   full_join(db_ht, join_by(registratsionnyy_nomer, naimenovaniye)) -> db_ht
 
 colnames(db_ht)
+sapply(db_ht, class)
 
 
 
 hist(db_ht$`2023_ndfl_1, mln. rub.` - db_ht$`2023_ndfl_2, mln. rub.`)
 
 
-db_ht %>% 
-  group_by(okved_main_class) %>% 
-  summarise(nalog_na_pribl = sum(`2023_nalog na pribylʹ, mln. rub`, na.rm = TRUE)) %>% 
-  mutate(prop = nalog_na_pribl / sum(nalog_na_pribl)) %>% 
-  arrange(desc(nalog_na_pribl)) %>% 
-  ggplot(aes(fct_reorder(okved_main_class, nalog_na_pribl), nalog_na_pribl)) +
-  geom_col() +
-  geom_label(aes(label = paste(nalog_na_pribl, "\n", round(prop * 100, 2), "%"),
-                 y = nalog_na_pribl + 1000)) +
-  coord_flip()
+# db_ht %>% 
+#   group_by(okved_main_class) %>% 
+#   summarise(nalog_na_pribl = sum(`2023_nalog na pribylʹ, mln. rub`, na.rm = TRUE)) %>% 
+#   mutate(prop = nalog_na_pribl / sum(nalog_na_pribl)) %>% 
+#   arrange(desc(nalog_na_pribl)) %>% 
+#   ggplot(aes(fct_reorder(okved_main_class, nalog_na_pribl), nalog_na_pribl)) +
+#   geom_col() +
+#   geom_label(aes(label = paste(nalog_na_pribl, "\n", round(prop * 100, 2), "%"),
+#                  y = nalog_na_pribl + 1000)) +
+#   coord_flip()
 
-db_ht %>% 
-  arrange(desc(`2022_nalog na pribylʹ, mln. rub`)) %>% 
-  select(naimenovaniye, `2023_nalog na pribylʹ, mln. rub`)
+# db_ht %>% 
+#   arrange(desc(`2022_nalog na pribylʹ, mln. rub`)) %>% 
+#   select(naimenovaniye, `2023_nalog na pribylʹ, mln. rub`)
 
 db_ht %>% 
   arrange(desc(`2021_nalog na pribylʹ, mln. rub`)) %>% 
@@ -613,6 +617,7 @@ db_ht %>% # colnames()
          `okv·ed_osnovnoy`,
          `okv·edy_dopolnitelʹnyye`,
          okved_main_class,
+         contains("srednespisochnaya chislennostʹ rabotnikov"),
          contains("ndfl"),
          contains("nalog na pribyl")) %>% write_csv("db_ht_nalogi.csv")
 
@@ -621,4 +626,20 @@ db_ht %>% # colnames()
 ## NALOGI -----
 
 db_ht_nalogi <- read_csv("db_ht_nalogi.csv") %>% mutate(registratsionnyy_nomer = as.character(registratsionnyy_nomer))
+
+db_ht_nalogi %>% select(contains("srednespisochnaya")) %>% sapply(unique)
+
+db_ht_nalogi %>% 
+  pivot_longer(cols = -c(registratsionnyy_nomer,
+                         naimenovaniye,
+                         `okv·ed_osnovnoy`,
+                         `okv·edy_dopolnitelʹnyye`,
+                         okved_main_class,
+                         razmer_kompanii)) %>% # pull(name)
+  mutate(year = str_extract(name, "^\\d{4}"),
+         stat = str_remove(name, "^\\d{4}_")) %>% 
+  pivot_wider(names_from = stat,
+              values_from = value) %>% View()
+
+
 
