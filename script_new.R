@@ -653,7 +653,8 @@ db_ht_nalogi %>%
   #           mean = mean(prop_diff_1, na.rm = TRUE),
   #           max = max(prop_diff_1, na.rm = TRUE))
   mutate(reg_ndfl = `ndfl_1, mln. rub.` * 0.85,
-         reg_nprib = `nalog na pribylʹ, mln. rub` * 0.85)
+         reg_nprib = `nalog na pribylʹ, mln. rub` * 0.85) -> db_ht_nalogi_reg
+
   
 
 
