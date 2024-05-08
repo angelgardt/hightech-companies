@@ -638,8 +638,14 @@ db_ht_nalogi %>%
                          razmer_kompanii)) %>% # pull(name)
   mutate(year = str_extract(name, "^\\d{4}"),
          stat = str_remove(name, "^\\d{4}_")) %>% 
+  select(-name) %>% 
   pivot_wider(names_from = stat,
-              values_from = value) %>% View()
+              values_from = value) %>% # View()
+  select(contains("ndfl")) %>% 
+  # sapply(function(x) sum(is.na(x)))
+  mutate(diff = `ndfl_1, mln. rub.` - `ndfl_2, mln. rub.`,
+         abs_diff = abs(diff),
+         is_positive = ifelse(diff > 0, TRUE, FALSE)) %>% pull(is_positive) %>% table()
 
 
 
