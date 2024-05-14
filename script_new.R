@@ -1,5 +1,7 @@
 library(tidyverse)
 theme_set(theme_bw())
+theme_update(legend.position = "bottom")
+library(googlesheets4)
 
 ### Reading -----
 files <- dir("db", full.names = TRUE)
@@ -668,6 +670,7 @@ db_ht_nalogi_reg %>%
 
 
 db_ht_nalogi_reg %>% 
+  filter(!str_detect(naimenovaniye, "МЕДИЦИНСКИЕ УСЛУГИ")) %>% 
   summarise(sum_ndfl_class = sum(reg_ndfl, na.rm = TRUE),
             sum_nprib_class = sum(reg_nprib, na.rm = TRUE),
             .by = okved_main_class) %>%
@@ -676,10 +679,36 @@ db_ht_nalogi_reg %>%
   full_join(okved_ht, join_by(okved_main_class == Класс)) %>% 
   # write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
   #            sheet = "Налоги от отраслей за отчетный период (2019-2023)")
+  # write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
+  #            sheet = "Налоги от отраслей за отчетный период (2019-2023) б/МУ")
   right_join(ht_nalogi_2019_2023 %>% 
                select(-matches("^wmean")), join_by(okved_main_class)) %>% 
   mutate(p_ndfl = round(sum_ndfl / sum_ndfl_class * 100, 2),
          p_nprib = round(sum_nprib / sum_nprib_class * 100, 2)) %>% print()
   # write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
   #             sheet = "Налоги компаний за отчетный период (2019-2023) Доли")
+  # write_sheet("https://docs.google.com/spreadsheets/d/13QUvQE6bwxf8P5Ejaijz-LTTmlSH2zOLCYfXe1EXiY8/edit?usp=sharing",
+  #             sheet = "Налоги компаний за отчетный период (2019-2023) Доли б/МУ")
   
+
+
+
+db_ht_nalogi_reg %>% 
+  filter(!str_detect(naimenovaniye, "МЕДИЦИНСКИЕ УСЛУГИ")) %>% 
+  summarise(sum_ndfl_class = sum(reg_ndfl, na.rm = TRUE),
+            sum_nprib_class = sum(reg_nprib, na.rm = TRUE),
+            .by = c(okved_main_class, year)) %>%
+  # mutate(p_ndfl_class = round(sum_ndfl_class / sum(sum_ndfl_class) * 100, 2),
+  #        p_nprib_class = round(sum_nprib_class / sum(sum_nprib_class) * 100, 2)) %>% 
+  # full_join(okved_ht, join_by(okved_main_class == Класс)) %>% 
+  pivot_longer(cols = -c(okved_main_class, year)) %>% 
+  ggplot(aes(as.character(okved_main_class), value, fill = name)) +
+  geom_col(position = position_dodge()) +
+  coord_flip() +
+  scale_fill_discrete(labels = c(sum_ndfl_class = "НДФЛ", 
+                                 sum_nprib_class = "Налог на прибыль")) +
+  facet_wrap(~ year, ncol = 5) +
+  labs(x = "ОКВЭД (основной)",
+       y = "Сумма по налогам компаний отрасли",
+       fill = "Налог")
+
