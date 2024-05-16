@@ -712,3 +712,27 @@ db_ht_nalogi_reg %>%
        y = "Сумма по налогам компаний отрасли",
        fill = "Налог")
 
+
+
+
+
+## CHECK TINK
+
+db_ht_nalogi_reg %>% 
+  filter(!str_detect(naimenovaniye, "МЕДИЦИНСКИЕ УСЛУГИ")) %>% 
+  summarise(sum_ndfl_class = sum(reg_ndfl, na.rm = TRUE),
+            sum_nprib_class = sum(reg_nprib, na.rm = TRUE),
+            .by = okved_main_class) %>%
+  mutate(p_ndfl_class = round(sum_ndfl_class / sum(sum_ndfl_class) * 100, 2),
+         p_nprib_class = round(sum_nprib_class / sum(sum_nprib_class) * 100, 2)) %>% 
+  full_join(okved_ht, join_by(okved_main_class == Класс)) %>% 
+  right_join(ht_nalogi_2019_2023 %>% 
+               select(-matches("^wmean")), join_by(okved_main_class)) %>% 
+  mutate(p_ndfl = round(sum_ndfl / sum_ndfl_class * 100, 2),
+         p_nprib = round(sum_nprib / sum_nprib_class * 100, 2)) %>% 
+  filter(str_detect(naimenovaniye, "ТИНЬК")) %>% View()
+
+
+db_ht %>% 
+  select(naimenovaniye, contains("ndfl_1"), contains("pribyl")) %>% 
+  filter(str_detect(naimenovaniye, "ТИНЬК")) %>% View()
