@@ -736,3 +736,30 @@ db_ht_nalogi_reg %>%
 db_ht %>% 
   select(naimenovaniye, contains("ndfl_1"), contains("pribyl")) %>% 
   filter(str_detect(naimenovaniye, "ТИНЬК")) %>% View()
+
+
+db_ht %>% select(naimenovaniye, naimenovaniye_polnoye, registratsionnyy_nomer)
+
+read_sheet("https://docs.google.com/spreadsheets/d/1BuNOA5iZWHVUznYHOlcqObw2G1kdfMf1_F7EFZl401s/edit?usp=sharing",
+           skip = 1) %>% 
+  filter(chosen_okved, analytics) %>% 
+  left_join(
+    db_ht %>% select(naimenovaniye, naimenovaniye_polnoye, registratsionnyy_nomer)
+  ) -> for_analytics
+
+View(for_analytics)
+
+for_analytics %>% 
+  select(Название, 
+         okved_main_class, 
+         registratsionnyy_nomer, 
+         naimenovaniye,
+         naimenovaniye_polnoye,
+         sum_ndfl, 
+         sum_nprib, 
+         p_ndfl, 
+         p_nprib) %>% 
+  write_sheet("https://docs.google.com/spreadsheets/d/1BuNOA5iZWHVUznYHOlcqObw2G1kdfMf1_F7EFZl401s/edit?usp=sharing",
+              sheet = "Компании")
+
+
